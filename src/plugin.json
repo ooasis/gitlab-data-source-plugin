@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "gitlab-plugin",
+  "id": "os-gitlab-plugin",
+  "metrics": true,
+  "info": {
+    "description": "Data source backed by Gitlab API",
+    "author": {
+      "name": "Hang Sun",
+      "url": ""
+    },
+    "keywords": [
+      "gitlab"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/grafana-starter-datasource"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/grafana-starter-datasource/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "routes": [
+    {
+      "path": "gitlab",
+      "url": "{{ .JsonData.apiEndpoint }}",
+      "headers": [
+        {
+          "name": "Private-Token",
+          "content": "{{ .SecureJsonData.apiKey }}"
+        }
+      ]
+    }
+  ],  "dependencies": {
+    "grafanaDependency": ">=7.0.0",
+    "plugins": []
+  }
+}
