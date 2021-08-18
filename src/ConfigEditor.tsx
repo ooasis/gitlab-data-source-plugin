@@ -1,11 +1,11 @@
-import React, { ChangeEvent, PureComponent } from 'react';
-import { LegacyForms } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions, MySecureJsonData } from './types';
+import { LegacyForms } from '@grafana/ui';
+import React, { ChangeEvent, PureComponent } from 'react';
+import { GitlabDataSourceOptions, GitlabSecureJsonData } from './types';
 
 const { SecretFormField, FormField } = LegacyForms;
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
+interface Props extends DataSourcePluginOptionsEditorProps<GitlabDataSourceOptions> {}
 
 interface State {}
 
@@ -30,7 +30,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
     });
   };
 
-  onResetAPIKey = () => {
+  onAPIKeyReset = () => {
     const { onOptionsChange, options } = this.props;
     onOptionsChange({
       ...options,
@@ -48,7 +48,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
   render() {
     const { options } = this.props;
     const { jsonData, secureJsonFields } = options;
-    const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
+    const secureJsonData = (options.secureJsonData || {}) as GitlabSecureJsonData;
 
     return (
       <div className="gf-form-group">
@@ -58,7 +58,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
             label="API Endpoint"
             placeholder="api endpoint"
             labelWidth={10}
-            inputWidth={40}
+            inputWidth={20}
             onChange={this.onEndpointChange}
           />
         </div>
@@ -72,7 +72,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
               placeholder="private token"
               labelWidth={10}
               inputWidth={20}
-              onReset={this.onResetAPIKey}
+              onReset={this.onAPIKeyReset}
               onChange={this.onAPIKeyChange}
             />
           </div>

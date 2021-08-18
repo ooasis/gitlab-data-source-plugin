@@ -1,32 +1,28 @@
-// import defaults from 'lodash/defaults';
-
 // @ts-ignore
-import { getBackendSrv, logDebug, logInfo, logWarning, logError } from '@grafana/runtime';
-
 import {
   DataQueryRequest,
   DataQueryResponse,
   DataSourceApi,
   DataSourceInstanceSettings,
-  MutableDataFrame,
   FieldType,
+  MutableDataFrame,
 } from '@grafana/data';
-
-import { MyQuery, MyDataSourceOptions } from './types';
+import { getBackendSrv } from '@grafana/runtime';
+import { GitlabDataSourceOptions, GitlabQuery } from './types';
 
 const routePath = '/gitlab';
 
-export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
+export class DataSource extends DataSourceApi<GitlabQuery, GitlabDataSourceOptions> {
   url?: string;
 
-  constructor(instanceSettings: DataSourceInstanceSettings<MyDataSourceOptions>) {
+  constructor(instanceSettings: DataSourceInstanceSettings<GitlabDataSourceOptions>) {
     super(instanceSettings);
 
     this.url = instanceSettings.url;
   }
 
-  async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {
-    const promises = options.targets.map(async query => {
+  async query(options: DataQueryRequest<GitlabQuery>): Promise<DataQueryResponse> {
+    const promises = options.targets.map(async (query) => {
       const frame = await this.doRequest(query);
       return frame;
     });
@@ -34,17 +30,17 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     return { data };
   }
 
-  async doRequest(query: MyQuery) {
-    if (!query.group) {
+  async doRequest(query: GitlabQuery) {
+    if (!query.groupId) {
       return await this.fetchGroups(query);
-    } else if (!query.project) {
+    } else if (!query.projectId) {
       return await this.fetchProjects(query);
     } else {
       return await this.fetchTags(query);
     }
   }
 
-  async fetchTags(q: MyQuery) {
+  async fetchTags(q: GitlabQuery) {
     const frame = new MutableDataFrame({
       refId: q.refId,
       fields: [
@@ -53,22 +49,17 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       ],
     });
 
-    try {
-      const { data: projects } = await this.callGitlabAPI(`/projects/${q.project}/repository/tags`);
-
-      if (projects) {
-        projects.forEach((r: any) => {
-          frame.appendRow([r.name, r.message]);
-        });
-      }
-    } catch (e) {
-      logError(`Failed to fetch projects. Error: ${e}`);
+    const { data: projects } = await this.callGitlabAPI(`/projects/${q.projectId}/repository/tags`);
+    if (projects) {
+      projects.forEach((r: any) => {
+        frame.appendRow([r.name, r.message]);
+      });
     }
 
     return frame;
   }
 
-  async fetchProjects(q: MyQuery) {
+  async fetchProjects(q: GitlabQuery) {
     const frame = new MutableDataFrame({
       refId: q.refId,
       fields: [
@@ -77,22 +68,17 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       ],
     });
 
-    try {
-      const { data: projects } = await this.callGitlabAPI(`/groups/${q.group}/projects`);
-
-      if (projects) {
-        projects.forEach((r: any) => {
-          frame.appendRow([r.name, r.id]);
-        });
-      }
-    } catch (e) {
-      logError(`Failed to fetch projects. Error: ${e}`);
+    const { data: projects } = await this.callGitlabAPI(`/groups/${q.groupId}/projects`);
+    if (projects) {
+      projects.forEach((r: any) => {
+        frame.appendRow([r.name, r.id]);
+      });
     }
 
     return frame;
   }
 
-  async fetchGroups(q: MyQuery) {
+  async fetchGroups(q: GitlabQuery) {
     const frame = new MutableDataFrame({
       refId: q.refId,
       fields: [
@@ -101,29 +87,29 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       ],
     });
 
-    try {
-      const { data: groups } = await this.callGitlabAPI('/groups');
-
-      if (groups) {
-        groups.forEach((r: any) => {
-          frame.appendRow([r.name, r.id]);
-        });
-      }
-    } catch (e) {
-      logError(`Failed to fetch groups. Error: ${e}`);
+    const { data: groups } = await this.callGitlabAPI('/groups');
+    if (groups) {
+      groups.forEach((r: any) => {
+        frame.appendRow([r.name, r.id]);
+      });
     }
 
     return frame;
   }
 
-  async callGitlabAPI(path: string, params: any = {}) {
-    const response = await getBackendSrv().datasourceRequest({
-      method: 'GET',
-      url: this.url + routePath + path,
-      params,
-    });
-    logDebug(`Gitlab API response: ${response}`);
-    return response;
+  async callGitlabAPI(path: string, params: object = {}) {
+    try {
+      const response = await getBackendSrv().datasourceRequest({
+        method: 'GET',
+        url: this.url + routePath + path,
+        params,
+      });
+      console.debug(`Gitlab API response: ${response}`);
+      return response;
+    } catch (e) {
+      console.error(`Failed to fetch groups. Error: ${e}`);
+      throw e;
+    }
   }
 
   async testDatasource() {
@@ -134,7 +120,6 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
         message: 'Success',
       };
     } catch (e) {
-      logError(`Failed to fetch groups. Error: ${e}`);
       return {
         status: 'error',
         message: `Error: ${e}`,
