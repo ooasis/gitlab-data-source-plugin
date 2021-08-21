@@ -1,4 +1,3 @@
-// @ts-ignore
 import {
   DataQueryRequest,
   DataQueryResponse,
@@ -102,7 +101,7 @@ export class DataSource extends DataSourceApi<GitlabQuery, GitlabDataSourceOptio
       const response = await getBackendSrv().datasourceRequest({
         method: 'GET',
         url: this.url + routePath + path,
-        params,
+        params: { ...params, per_page: 100 },
       });
       console.debug(`Gitlab API response: ${response}`);
       return response;

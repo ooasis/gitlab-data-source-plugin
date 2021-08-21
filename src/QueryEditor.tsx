@@ -4,7 +4,6 @@ import React, { ChangeEvent, PureComponent } from 'react';
 import { DataSource } from './datasource';
 import { GitlabDataSourceOptions, GitlabQuery } from './types';
 
-
 const { FormField } = LegacyForms;
 
 type Props = QueryEditorProps<DataSource, GitlabQuery, GitlabDataSourceOptions>;
